@@ -9,10 +9,14 @@ repository.workspace = true
 [target.'cfg(any(target_os = "linux", target_os = "windows", target_os = "macos"))'.dependencies]
 arboard.workspace = true
 
+[target.'cfg(target_os = "windows")'.dependencies]
+windows-sys.workspace = true
+
 [dependencies]
 sys-locale.workspace = true
 fluent.workspace = true
 unic-langid.workspace = true
+fontdb.workspace = true
 
 [lints]
 workspace = true

@@ -126,6 +126,11 @@ impl<A: Application> Runtime<A> {
             .create_surface(window.clone())
             .map_err(|e| e.to_string())?;
         let mut renderer = pollster::block_on(Renderer::new(&instance, Some(&surface)))?;
+        let system_fonts = akari_native::fonts::system_fonts();
+        renderer.set_default_font_family(system_fonts.family());
+        for font in system_fonts.faces() {
+            renderer.load_font(font.clone());
+        }
         let adapter = renderer.adapter_info();
         self.app.renderer_info(akari_core::RendererInfo {
             adapter_name: adapter.name.clone(),

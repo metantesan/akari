@@ -48,14 +48,14 @@ dependencies = [
 
 [[package]]
 name = "akari-cli"
-version = "0.0.1"
+version = "0.0.2"
 dependencies = [
  "clap",
 ]
 
 [[package]]
 name = "akari-components"
-version = "0.0.1"
+version = "0.0.2"
 dependencies = [
  "akari-core",
  "akari-icons",
@@ -63,14 +63,14 @@ dependencies = [
 
 [[package]]
 name = "akari-core"
-version = "0.0.1"
+version = "0.0.2"
 dependencies = [
  "unicode-segmentation",
 ]
 
 [[package]]
 name = "akari-gui"
-version = "0.0.1"
+version = "0.0.2"
 dependencies = [
  "akari-components",
  "akari-core",
@@ -81,7 +81,7 @@ dependencies = [
 
 [[package]]
 name = "akari-icons"
-version = "0.0.1"
+version = "0.0.2"
 dependencies = [
  "akari-core",
  "handlebars",
@@ -90,17 +90,19 @@ dependencies = [
 
 [[package]]
 name = "akari-native"
-version = "0.0.1"
+version = "0.0.2"
 dependencies = [
  "arboard",
  "fluent",
+ "fontdb",
  "sys-locale",
  "unic-langid",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
 name = "akari-platform"
-version = "0.0.1"
+version = "0.0.2"
 dependencies = [
  "akari-core",
  "akari-native",
@@ -112,7 +114,7 @@ dependencies = [
 
 [[package]]
 name = "akari-renderer"
-version = "0.0.1"
+version = "0.0.2"
 dependencies = [
  "akari-core",
  "akari-icons",
@@ -126,7 +128,7 @@ dependencies = [
 
 [[package]]
 name = "akari-showcase"
-version = "0.0.1"
+version = "0.0.2"
 dependencies = [
  "akari-gui",
  "akari-renderer",
@@ -138,7 +140,7 @@ dependencies = [
 
 [[package]]
 name = "akari-tasks"
-version = "0.0.1"
+version = "0.0.2"
 dependencies = [
  "akari-gui",
  "akari-renderer",

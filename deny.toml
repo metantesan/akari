@@ -4,12 +4,13 @@ all-features = true
 [advisories]
 version = 2
 ignore = [
-    { id = "RUSTSEC-2026-0192", reason = "ttf-parser 0.25.1 is pulled through fontdb by cosmic-text and owned_ttf_parser by Linux's sctk-adwaita. RustSec reports no safe upgrade; revisit when those dependency stacks can move to a maintained parser." },
+    { id = "RUSTSEC-2026-0192", reason = "ttf-parser 0.25.1 is pulled through fontdb by cosmic-text and the native font provider, and through owned_ttf_parser by Linux's sctk-adwaita. RustSec reports no safe upgrade; revisit when those dependency stacks can move to a maintained parser." },
 ]
 
 [bans]
 multiple-versions = "warn"
 wildcards = "deny"
+allow-wildcard-paths = true
 allow = []
 deny = []
 skip = []
@@ -23,6 +24,7 @@ allow = [
     "BSL-1.0",
     "ISC",
     "MIT",
+    "OFL-1.1",
     "Unicode-3.0",
     "Unlicense",
     "Zlib",
@@ -35,52 +37,52 @@ confidence-threshold = 0.8
 [[licenses.clarify]]
 crate = "akari-cli"
 expression = "BSD-3-Clause AND Apache-2.0"
-license-files = [{ path = "../../LICENSE", hash = 0x72e1af96 }]
+license-files = [{ path = "../../LICENSE", hash = 0x1ff624d2 }]
 
 [[licenses.clarify]]
 crate = "akari-icons"
 expression = "BSD-3-Clause AND ISC AND MIT"
-license-files = [{ path = "../../LICENSE", hash = 0x72e1af96 }]
+license-files = [{ path = "../../LICENSE", hash = 0x1ff624d2 }]
 
 [[licenses.clarify]]
 crate = "akari-components"
 expression = "BSD-3-Clause"
-license-files = [{ path = "../../LICENSE", hash = 0x72e1af96 }]
+license-files = [{ path = "../../LICENSE", hash = 0x1ff624d2 }]
 
 [[licenses.clarify]]
 crate = "akari-core"
 expression = "BSD-3-Clause"
-license-files = [{ path = "../../LICENSE", hash = 0x72e1af96 }]
+license-files = [{ path = "../../LICENSE", hash = 0x1ff624d2 }]
 
 [[licenses.clarify]]
 crate = "akari-gui"
 expression = "BSD-3-Clause"
-license-files = [{ path = "../../LICENSE", hash = 0x72e1af96 }]
+license-files = [{ path = "../../LICENSE", hash = 0x1ff624d2 }]
 
 [[licenses.clarify]]
 crate = "akari-native"
-expression = "BSD-3-Clause"
-license-files = [{ path = "../../LICENSE", hash = 0x72e1af96 }]
+expression = "BSD-3-Clause AND OFL-1.1"
+license-files = [{ path = "../../LICENSE", hash = 0x1ff624d2 }]
 
 [[licenses.clarify]]
 crate = "akari-platform"
 expression = "BSD-3-Clause"
-license-files = [{ path = "../../LICENSE", hash = 0x72e1af96 }]
+license-files = [{ path = "../../LICENSE", hash = 0x1ff624d2 }]
 
 [[licenses.clarify]]
 crate = "akari-renderer"
 expression = "BSD-3-Clause"
-license-files = [{ path = "../../LICENSE", hash = 0x72e1af96 }]
+license-files = [{ path = "../../LICENSE", hash = 0x1ff624d2 }]
 
 [[licenses.clarify]]
 crate = "akari-showcase"
 expression = "BSD-3-Clause"
-license-files = [{ path = "../../LICENSE", hash = 0x72e1af96 }]
+license-files = [{ path = "../../LICENSE", hash = 0x1ff624d2 }]
 
 [[licenses.clarify]]
 crate = "akari-tasks"
 expression = "BSD-3-Clause"
-license-files = [{ path = "../../LICENSE", hash = 0x72e1af96 }]
+license-files = [{ path = "../../LICENSE", hash = 0x1ff624d2 }]
 
 [licenses.private]
 ignore = false

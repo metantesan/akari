@@ -1,4 +1,5 @@
 pub(crate) mod clipboard;
+pub(crate) mod font;
 pub(crate) mod locale;
 pub(crate) mod theme;
 
@@ -23,6 +24,12 @@ impl crate::ThemeProvider for Platform {
 impl crate::LocaleProvider for Platform {
     fn system_locales(&self) -> Vec<String> {
         locale::system_locales()
+    }
+}
+
+impl crate::font::SystemFontProvider for Platform {
+    fn system_fonts(&self) -> crate::fonts::SystemFonts {
+        font::system_fonts()
     }
 }
 

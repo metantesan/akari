@@ -3,23 +3,24 @@ members = ["crates/*", "examples/tasks", "examples/showcase"]
 resolver = "2"
 
 [workspace.package]
-version = "0.0.1"
+version = "0.0.2"
 edition = "2024"
 license-file = "LICENSE"
 rust-version = "1.97"
 repository = "https://github.com/metantesan/akari"
 
 [workspace.dependencies]
-akari-core = { version = "0.0.1", path = "crates/akari-core" }
-akari-renderer = { version = "0.0.1", path = "crates/akari-renderer" }
-akari-platform = { version = "0.0.1", path = "crates/akari-platform" }
-akari = { package = "akari-gui", version = "0.0.1", path = "crates/akari" }
-akari-icons = { version = "0.0.1", path = "crates/akari-icons" }
-akari-components = { version = "0.0.1", path = "crates/akari-components" }
-akari-native = { version = "0.0.1", path = "crates/akari-native" }
+akari-core = { path = "crates/akari-core" }
+akari-renderer = { path = "crates/akari-renderer" }
+akari-platform = { path = "crates/akari-platform" }
+akari = { package = "akari-gui", path = "crates/akari" }
+akari-icons = { path = "crates/akari-icons" }
+akari-components = { path = "crates/akari-components" }
+akari-native = { path = "crates/akari-native" }
 winit = { version = "0.30.13", features = ["android-native-activity"] }
 wgpu = "30.0.1"
 cosmic-text = "0.19.0"
+fontdb = "0.23.0"
 pollster = "1.0.1"
 bytemuck = { version = "1.25", features = ["derive"] }
 unicode-segmentation = "1.13"
@@ -35,6 +36,7 @@ serde_json = "1.0"
 eyre = "0.6.14"
 color-eyre = "0.6.5"
 clap = { version = "4.6.7", features = ["derive", "color"] }
+windows-sys = { version = "0.61.2", features = ["Win32_Foundation", "Win32_Graphics_Gdi", "Win32_UI_WindowsAndMessaging"] }
 
 [profile.release]
 opt-level = "z"

@@ -53,6 +53,13 @@ pub mod clipboard {
 
 pub mod localization;
 
+mod font;
+
+/// Native system-font lookup and framework-owned fallback faces.
+pub mod fonts {
+    pub use crate::font::{SystemFontProvider, SystemFonts, system_fonts};
+}
+
 /// Returns system-preferred BCP 47 language tags, most preferred first.
 pub fn system_locales() -> Vec<String> {
     LocaleProvider::system_locales(&current())

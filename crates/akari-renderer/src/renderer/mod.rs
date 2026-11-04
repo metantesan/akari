@@ -401,6 +401,11 @@ impl Renderer {
         self.glyphs.clear();
         self.pack = [1, 1, 0];
     }
+
+    /// Select the native system sans-serif family for default text.
+    pub fn set_default_font_family(&mut self, family: &str) {
+        self.fonts.db_mut().set_sans_serif_family(family);
+    }
 }
 
 fn texture(
