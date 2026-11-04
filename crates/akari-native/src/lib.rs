@@ -87,6 +87,46 @@ pub mod theme {
     }
 }
 
+/// Safe-area insets for a native window, expressed in logical pixels.
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
+pub struct WindowInsets {
+    pub left: f32,
+    pub top: f32,
+    pub right: f32,
+    pub bottom: f32,
+}
+
+/// Native window inset lookup.
+pub mod window_insets {
+    use crate::WindowInsets;
+    use winit::{event_loop::ActiveEventLoop, window::Window};
+
+    pub fn for_window(window: &Window) -> WindowInsets {
+        crate::WindowInsetsProvider::window_insets(&crate::current(), window)
+    }
+
+    pub fn from_event_loop(event_loop: &ActiveEventLoop, window: &Window) -> WindowInsets {
+        crate::WindowInsetsProvider::window_insets_from_event_loop(
+            &crate::current(),
+            event_loop,
+            window,
+        )
+    }
+}
+
+/// Provides the visible content bounds for a native window.
+pub trait WindowInsetsProvider {
+    fn window_insets(&self, window: &winit::window::Window) -> WindowInsets;
+
+    fn window_insets_from_event_loop(
+        &self,
+        _event_loop: &winit::event_loop::ActiveEventLoop,
+        window: &winit::window::Window,
+    ) -> WindowInsets {
+        self.window_insets(window)
+    }
+}
+
 /// Native plain-text clipboard access.
 pub trait Clipboard {
     fn get_text(&mut self) -> Result<String, clipboard::ClipboardError>;

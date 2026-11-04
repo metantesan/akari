@@ -14,6 +14,7 @@ pub struct WidgetState {
     pub anchor: usize,
     pub anchor_after: bool,
     pub composition: String,
+    pub composition_cursor: Option<(usize, usize)>,
 }
 #[derive(Clone, Copy, Debug)]
 pub enum EditKey {
@@ -37,6 +38,7 @@ pub enum Event {
     Text(String),
     Edit(EditKey, bool),
     Composition(String),
+    CompositionWithCursor(String, Option<(usize, usize)>),
     FocusLost,
 }
 struct Node<M> {

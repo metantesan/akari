@@ -1,6 +1,6 @@
 //! Winit lifecycle adapter. Public application code remains platform independent.
 use super::keyboard::keyboard_event;
-use akari_core::{Application, EditKey, Event, Task, Theme, ThemePreference, Ui};
+use akari_core::{Application, Draw, EditKey, Event, Rect, Task, Theme, ThemePreference, Ui};
 
 mod lifecycle;
 mod text_input;
@@ -35,6 +35,7 @@ pub fn run_with_event_loop<A: Application>(
         touch: None,
         ime: false,
         system_theme: akari_native::theme::SystemTheme::Unknown,
+        last_insets: akari_native::WindowInsets::default(),
         error: None,
     };
     event_loop.run_app(&mut runtime)?;
@@ -63,6 +64,7 @@ struct Runtime<A: Application> {
     touch: Option<(u64, [f32; 2], bool)>,
     ime: bool,
     system_theme: akari_native::theme::SystemTheme,
+    last_insets: akari_native::WindowInsets,
     error: Option<String>,
 }
 impl<A: Application> Runtime<A> {
@@ -87,13 +89,29 @@ impl<A: Application> Runtime<A> {
         }
     }
     fn size(&self) -> [f32; 2] {
+        let insets = self.insets();
         self.window
             .as_ref()
             .map(|w| {
                 let size = w.inner_size().to_logical::<f32>(w.scale_factor());
-                [size.width, size.height]
+                [
+                    (size.width - insets.left - insets.right).max(0.),
+                    (size.height - insets.top - insets.bottom).max(0.),
+                ]
             })
             .unwrap_or([0., 0.])
+    }
+    fn insets(&self) -> akari_native::WindowInsets {
+        self.last_insets
+    }
+    fn update_insets(&mut self, event_loop: &ActiveEventLoop) {
+        if let Some(window) = &self.window {
+            self.last_insets = akari_native::window_insets::from_event_loop(event_loop, window);
+        }
+    }
+    fn content_point(&self, x: f32, y: f32) -> [f32; 2] {
+        let insets = self.insets();
+        [x - insets.left, y - insets.top]
     }
     fn rebuild(&mut self) {
         let size = self.size();
@@ -102,7 +120,11 @@ impl<A: Application> Runtime<A> {
         if let Some(w) = &self.window {
             w.set_ime_allowed(self.ui.text_focused());
             if let Some(r) = self.ui.focused_bounds() {
-                w.set_ime_cursor_area(LogicalPosition::new(r.x, r.y), LogicalSize::new(r.w, r.h));
+                let insets = self.insets();
+                w.set_ime_cursor_area(
+                    LogicalPosition::new(r.x + insets.left, r.y + insets.top),
+                    LogicalSize::new(r.w, r.h),
+                );
             }
             w.request_redraw();
         }
@@ -166,5 +188,25 @@ impl<A: Application> Runtime<A> {
             _instance: instance,
         });
         Ok(())
+    }
+
+    fn offset_draws(draws: &mut [Draw], offset: [f32; 2]) {
+        let offset_rect = |rect: &mut Rect| {
+            rect.x += offset[0];
+            rect.y += offset[1];
+        };
+        for draw in draws {
+            match draw {
+                Draw::Quad { rect, clip, .. }
+                | Draw::Glass { rect, clip, .. }
+                | Draw::Text { rect, clip, .. }
+                | Draw::TextField { rect, clip, .. }
+                | Draw::Image { rect, clip, .. }
+                | Draw::Icon { rect, clip, .. } => {
+                    offset_rect(rect);
+                    offset_rect(clip);
+                }
+            }
+        }
     }
 }

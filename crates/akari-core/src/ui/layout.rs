@@ -29,7 +29,7 @@ impl<M: Clone> Ui<M> {
             .collect();
         self.nodes.clear();
         let bounds = Rect::new(0., 0., size[0], size[1]);
-        self.layout(root, bounds, bounds);
+        self.layout(root.clone(), bounds, bounds);
         for n in &self.nodes {
             if let Kind::TextField { value, .. } = &n.element.kind {
                 let state = self
@@ -70,6 +70,13 @@ impl<M: Clone> Ui<M> {
                         .copied()
                 })
                 .or_else(|| focus_order.first().copied());
+        }
+        // Viewport changes (notably the Android software keyboard) can make
+        // the focused field fall below a scroll view's visible area. Reveal
+        // it and lay out once more so the draw tree reflects the new offset.
+        if self.reveal_focus() {
+            self.nodes.clear();
+            self.layout(root, bounds, bounds);
         }
     }
     fn layout(&mut self, e: Element<M>, rect: Rect, clip: Rect) {

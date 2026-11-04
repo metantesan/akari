@@ -163,6 +163,7 @@ fn write_template(root: &Path, options: &NewOptions) -> Result<(), Box<dyn Error
         ("{{java_package_path}}", java_package_path),
     ];
     if let Some(path) = &options.local_akari_path {
+        let workspace = workspace_root(path).unwrap_or_else(|| path.clone());
         replacements.push((
             "{{akari_dependency}}",
             format!(
@@ -170,11 +171,19 @@ fn write_template(root: &Path, options: &NewOptions) -> Result<(), Box<dyn Error
                 toml_string_path(path)
             ),
         ));
+        replacements.push((
+            "{{akari_local_inputs}}",
+            format!(
+                "inputs.files(fileTree(\"{}\") {{\n        include(\"Cargo.toml\", \"Cargo.lock\", \"rust-toolchain.toml\", \".cargo/**\", \"crates/akari/**\", \"crates/akari-core/**\", \"crates/akari-platform/**\", \"crates/akari-native/**\", \"crates/akari-renderer/**\", \"crates/akari-icons/**\", \"crates/akari-components/**\")\n        exclude(\"**/target/**\", \"**/build/**\")\n    }})",
+                kotlin_string_path(&workspace)
+            ),
+        ));
     } else {
         replacements.push((
             "{{akari_dependency}}",
             "akari = { git = \"https://github.com/metantesan/akari\", package = \"akari-gui\", optional = true }".to_owned(),
         ));
+        replacements.push(("{{akari_local_inputs}}", String::new()));
     }
     for file in TEMPLATE {
         let template_path = file.path.strip_suffix(".hbs").unwrap_or(file.path);
@@ -206,6 +215,21 @@ fn toml_string_path(path: &Path) -> String {
     path.to_string_lossy()
         .replace('\\', "\\\\")
         .replace('"', "\\\"")
+}
+fn kotlin_string_path(path: &Path) -> String {
+    path.to_string_lossy()
+        .replace('\\', "\\\\")
+        .replace('"', "\\\"")
+        .replace('$', "\\$")
+}
+fn workspace_root(package_path: &Path) -> Option<PathBuf> {
+    package_path
+        .ancestors()
+        .find(|path| {
+            fs::read_to_string(path.join("Cargo.toml"))
+                .is_ok_and(|manifest| manifest.lines().any(|line| line.trim() == "[workspace]"))
+        })
+        .map(Path::to_path_buf)
 }
 
 #[cfg(test)]

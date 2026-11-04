@@ -5,6 +5,12 @@ pub(crate) mod theme;
 
 pub struct Platform;
 
+impl crate::WindowInsetsProvider for Platform {
+    fn window_insets(&self, _: &winit::window::Window) -> crate::WindowInsets {
+        crate::WindowInsets::default()
+    }
+}
+
 impl crate::Clipboard for Platform {
     fn get_text(&mut self) -> Result<String, crate::clipboard::ClipboardError> {
         self::clipboard::get_text()

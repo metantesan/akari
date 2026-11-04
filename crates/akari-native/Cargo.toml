@@ -21,6 +21,7 @@ windows-sys.workspace = true
 
 [target.'cfg(target_os = "android")'.dependencies]
 android-activity.workspace = true
+jni.workspace = true
 ndk.workspace = true
 
 [lints]

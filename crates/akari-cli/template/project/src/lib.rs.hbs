@@ -16,6 +16,17 @@ pub struct App {
     dark: Option<bool>,
 }
 
+impl App {
+    fn system_is_dark() -> bool {
+        akari::native::ThemeProvider::system_theme(&akari::native::current(), None)
+            == akari::native::theme::SystemTheme::Dark
+    }
+
+    fn dark_mode(&self) -> bool {
+        self.dark.unwrap_or_else(Self::system_is_dark)
+    }
+}
+
 impl SimpleComponent for App {
     type Input = Message;
 
@@ -27,7 +38,7 @@ impl SimpleComponent for App {
         match message {
             Message::Increment => self.count += 1,
             Message::Decrement => self.count -= 1,
-            Message::ToggleTheme => self.dark = Some(!self.dark.unwrap_or(false)),
+            Message::ToggleTheme => self.dark = Some(!self.dark_mode()),
         }
         vec![]
     }
@@ -35,6 +46,7 @@ impl SimpleComponent for App {
     fn view(&self, size: [f32; 2]) -> Element<Self::Input> {
         let count = self.count;
         let compact = size[0] < 560.;
+        let dark_mode = self.dark_mode();
         akari::view! {
             Column(0) [
                 akari::view! { Text(1, "{{display_name}} is ready", if compact { 25. } else { 32. }) },
@@ -44,7 +56,7 @@ impl SimpleComponent for App {
                         akari::view! { Button(4, "−", Message::Decrement).width(72.) },
                         akari::view! { Button(5, "+", Message::Increment).width(72.) },
                         akari::view! {
-                            Button(6, if self.dark.unwrap_or(false) { "Light" } else { "Dark" }, Message::ToggleTheme)
+                            Button(6, if dark_mode { "Light" } else { "Dark" }, Message::ToggleTheme)
                                 .width(88.)
                         },
                     ]
@@ -58,7 +70,7 @@ impl SimpleComponent for App {
     }
 
     fn theme(&self) -> Theme {
-        if self.dark.unwrap_or(false) { Theme::dark() } else { Theme::light() }
+        if self.dark_mode() { Theme::dark() } else { Theme::light() }
     }
 
     fn theme_preference(&self) -> ThemePreference {

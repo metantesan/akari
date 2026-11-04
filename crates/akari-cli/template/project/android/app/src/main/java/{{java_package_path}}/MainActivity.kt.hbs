@@ -1,14 +1,53 @@
 package {{identifier}}
 
 import android.app.NativeActivity
+import android.os.Build
+import android.view.WindowInsets
+import java.util.concurrent.atomic.AtomicReference
 import {{identifier}}.runtime.AkariPlugins
 
 /** Android entry point; the shared Akari UI and state live in Rust. */
 class MainActivity : NativeActivity() {
+    private val akariInsets = AtomicReference("0,0,0,0")
+
     override fun onCreate(savedInstanceState: android.os.Bundle?) {
         super.onCreate(savedInstanceState)
+        val decor = window.decorView
+        decor.setOnApplyWindowInsetsListener { _, insets ->
+            val values = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                val safe = insets.getInsets(
+                    WindowInsets.Type.systemBars() or
+                        WindowInsets.Type.displayCutout() or
+                        WindowInsets.Type.ime()
+                )
+                intArrayOf(safe.left, safe.top, safe.right, safe.bottom)
+            } else {
+                legacySafeInsets(insets)
+            }
+            akariInsets.set(values.joinToString(","))
+            insets
+        }
+        decor.requestApplyInsets()
         // Register app-owned plugins here, for example:
         // AkariPlugins.register(DeviceInfoPlugin(this))
+    }
+
+    /** Read the latest safe area captured on Android's UI thread from Rust. */
+    fun akariWindowInsets(): String = akariInsets.get()
+
+    @Suppress("DEPRECATION")
+    private fun legacySafeInsets(insets: WindowInsets): IntArray {
+        val cutout = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            insets.displayCutout
+        } else {
+            null
+        }
+        return intArrayOf(
+            maxOf(insets.systemWindowInsetLeft, cutout?.safeInsetLeft ?: 0),
+            maxOf(insets.systemWindowInsetTop, cutout?.safeInsetTop ?: 0),
+            maxOf(insets.systemWindowInsetRight, cutout?.safeInsetRight ?: 0),
+            maxOf(insets.systemWindowInsetBottom, cutout?.safeInsetBottom ?: 0),
+        )
     }
 
     /** Called by Rust through JNI. Plugin methods run on the Android UI thread. */

@@ -127,12 +127,30 @@ impl Renderer {
             clip.h * scale,
         );
         let size = size * scale;
+        let composing = !state.composition.is_empty();
+        let (composition_start, composition_end, caret_byte) = if composing {
+            let start = state.anchor.min(state.cursor);
+            let end = start + state.composition.len();
+            let preedit_cursor = state
+                .composition_cursor
+                .map(|(_, cursor_end)| cursor_end)
+                .unwrap_or(state.composition.len());
+            (start, end, start + preedit_cursor)
+        } else {
+            (0, 0, state.cursor)
+        };
+        let caret_visible = !composing || state.composition_cursor.is_some();
+        // The UI draw builder inserts preedit text into this display string;
+        // the retained app value is still unchanged until IME commit.
         let mut buffer = self.buffer(text, size, rect.w, *align);
         buffer.set_wrap(Wrap::None);
         buffer.shape_until_scroll(&mut self.fonts, false);
         let runs: Vec<_> = buffer.layout_runs().collect();
-        let text_cursor =
-            Cursor::new_with_affinity(0, state.cursor, Affinity::from_after(state.cursor_after));
+        let text_cursor = Cursor::new_with_affinity(
+            0,
+            caret_byte,
+            Affinity::from_after(if composing { false } else { state.cursor_after }),
+        );
         let caret = runs
             .iter()
             .find_map(|run| run.cursor_position(&text_cursor))
@@ -149,15 +167,20 @@ impl Renderer {
             .map_or(size, |run| run.line_top + run.line_height);
         let block_height = layout_bottom - layout_top;
         let y_shift = ((rect.h - block_height) * 0.5).max(0.);
-        let start = state.anchor.min(state.cursor);
-        let end = state.anchor.max(state.cursor);
+        let start = if composing {
+            0
+        } else {
+            state.anchor.min(state.cursor)
+        };
+        let end = if composing {
+            0
+        } else {
+            state.anchor.max(state.cursor)
+        };
         let mut composition_bounds: Option<(f32, f32)> = None;
         for run in runs {
             for glyph in run.glyphs {
-                if !state.composition.is_empty()
-                    && glyph.end > state.cursor
-                    && glyph.start < state.cursor + state.composition.len()
-                {
+                if composing && glyph.end > composition_start && glyph.start < composition_end {
                     composition_bounds = Some(match composition_bounds {
                         Some((left, right)) => (left.min(glyph.x), right.max(glyph.x + glyph.w)),
                         None => (glyph.x, glyph.x + glyph.w),
@@ -215,7 +238,7 @@ impl Renderer {
                 0.,
             ));
         }
-        if *focused {
+        if *focused && caret_visible {
             items.push(Instance::new(
                 Rect::new(
                     rect.x + caret_x - scroll_x,

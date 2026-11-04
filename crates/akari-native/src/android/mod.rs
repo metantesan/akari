@@ -2,8 +2,36 @@ pub(crate) mod clipboard;
 pub(crate) mod font;
 pub(crate) mod locale;
 pub(crate) mod theme;
+pub(crate) mod window_insets;
 
 pub struct Platform;
+
+impl crate::WindowInsetsProvider for Platform {
+    fn window_insets(&self, window: &winit::window::Window) -> crate::WindowInsets {
+        use winit::platform::android::WindowExtAndroid;
+
+        let content = window.content_rect();
+        let window_size = window.inner_size();
+        let scale = window.scale_factor() as f32;
+        crate::WindowInsets {
+            left: content.left.max(0) as f32 / scale,
+            top: content.top.max(0) as f32 / scale,
+            right: (window_size.width as i32 - content.right).max(0) as f32 / scale,
+            bottom: (window_size.height as i32 - content.bottom).max(0) as f32 / scale,
+        }
+    }
+
+    fn window_insets_from_event_loop(
+        &self,
+        event_loop: &winit::event_loop::ActiveEventLoop,
+        window: &winit::window::Window,
+    ) -> crate::WindowInsets {
+        use winit::platform::android::ActiveEventLoopExtAndroid;
+
+        window_insets::from_activity(event_loop.android_app(), window.scale_factor() as f32)
+            .unwrap_or_else(|| self.window_insets(window))
+    }
+}
 
 impl crate::Clipboard for Platform {
     fn get_text(&mut self) -> Result<String, crate::clipboard::ClipboardError> {

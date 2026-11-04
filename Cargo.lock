@@ -96,6 +96,7 @@ dependencies = [
  "arboard",
  "fluent",
  "fontdb",
+ "jni",
  "ndk",
  "sys-locale",
  "unic-langid",

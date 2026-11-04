@@ -59,6 +59,7 @@ impl<M: Clone> Ui<M> {
                 self.pressed = None;
                 for s in self.states.values_mut() {
                     s.composition.clear();
+                    s.composition_cursor = None;
                 }
             }
             Event::Scroll(x, y, delta) => {
@@ -123,6 +124,15 @@ impl<M: Clone> Ui<M> {
             Event::Composition(value) => {
                 if let Some(s) = self.focused.and_then(|k| self.states.get_mut(&k)) {
                     s.composition = value;
+                    let end = s.composition.len();
+                    s.composition_cursor = Some((end, end));
+                }
+            }
+            Event::CompositionWithCursor(value, cursor) => {
+                if let Some(s) = self.focused.and_then(|k| self.states.get_mut(&k)) {
+                    s.composition_cursor =
+                        cursor.map(|(start, end)| (boundary(&value, start), boundary(&value, end)));
+                    s.composition = value;
                 }
             }
             Event::Text(_) | Event::Edit(..) => {
@@ -150,6 +160,7 @@ impl<M: Clone> Ui<M> {
                             s.anchor = s.cursor;
                             s.anchor_after = s.cursor_after;
                             s.composition.clear();
+                            s.composition_cursor = None;
                         }
                         Event::Edit(key, shift) => {
                             let prev = |p| {
@@ -223,16 +234,16 @@ impl<M: Clone> Ui<M> {
         }
         messages
     }
-    fn reveal_focus(&mut self) {
+    pub(super) fn reveal_focus(&mut self) -> bool {
         let Some(bounds) = self.focused_bounds() else {
-            return;
+            return false;
         };
         let Some(index) = self
             .nodes
             .iter()
             .position(|n| Some(n.element.key) == self.focused)
         else {
-            return;
+            return false;
         };
         for n in self.nodes[..index].iter().rev() {
             if matches!(n.element.kind, Kind::Scroll)
@@ -244,12 +255,15 @@ impl<M: Clone> Ui<M> {
                 } else {
                     (bounds.y + bounds.h - n.rect.y - n.rect.h).max(0.)
                 };
-                self.states
+                let state = self
+                    .states
                     .get_mut(&n.element.key)
-                    .expect("value must be present")
-                    .scroll = (self.states[&n.element.key].scroll + delta).max(0.);
-                break;
+                    .expect("value must be present");
+                let old_scroll = state.scroll;
+                state.scroll = (old_scroll + delta).clamp(0., state.scroll_max);
+                return (state.scroll - old_scroll).abs() > 0.01;
             }
         }
+        false
     }
 }

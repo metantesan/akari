@@ -245,14 +245,15 @@ impl<M: Clone> Ui<M> {
                         });
                     }
                     let s = &self.states[&e.key];
-                    let mut text = if value.is_empty() {
+                    let mut text = if value.is_empty() && s.composition.is_empty() {
                         placeholder.clone()
                     } else {
                         value.clone()
                     };
                     if !s.composition.is_empty() {
-                        let at = boundary(&text, s.cursor);
-                        text.insert_str(at, &s.composition);
+                        let start = boundary(&text, s.anchor.min(s.cursor));
+                        let end = boundary(&text, s.anchor.max(s.cursor));
+                        text.replace_range(start..end, &s.composition);
                     }
                     out.push(Draw::TextField {
                         rect: Rect::new(
@@ -264,7 +265,7 @@ impl<M: Clone> Ui<M> {
                         clip: c.intersect(r.inset(2.)),
                         text,
                         size: 16.,
-                        color: if value.is_empty() {
+                        color: if value.is_empty() && s.composition.is_empty() {
                             self.theme.muted
                         } else {
                             self.theme.text

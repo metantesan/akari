@@ -4,6 +4,7 @@
 /.agents/
 /.aws/
 /.codex/
+WORKPLAN.md
 
 # Android / Gradle
 .gradle/

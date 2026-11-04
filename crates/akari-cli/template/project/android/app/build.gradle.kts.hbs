@@ -48,6 +48,7 @@ val buildRustAndroid = tasks.register<Exec>("buildRustAndroid") {
         include("Cargo.toml", "Cargo.lock", "src/**")
         exclude("**/target/**", "**/build/**")
     })
+    {{akari_local_inputs}}
     outputs.file(rustLibrary)
 }
 

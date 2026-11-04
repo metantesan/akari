@@ -28,6 +28,7 @@ impl<A: Application> ApplicationHandler<A::Message> for Runtime<A> {
             let tasks = self.app.startup();
             self.tasks(tasks);
         }
+        self.update_insets(event_loop);
         self.rebuild();
     }
     fn suspended(&mut self, _: &ActiveEventLoop) {
@@ -39,6 +40,26 @@ impl<A: Application> ApplicationHandler<A::Message> for Runtime<A> {
         let tasks = self.app.update(message);
         self.tasks(tasks);
         self.rebuild();
+    }
+    fn about_to_wait(&mut self, event_loop: &ActiveEventLoop) {
+        // Android's content-rectangle callback is not exposed as a winit
+        // WindowEvent. Query native insets after each event-loop turn so
+        // system bars, cutout, and IME changes update layout and redraw.
+        let previous = self.last_insets;
+        self.update_insets(event_loop);
+        let insets_changed = self.last_insets != previous;
+        #[cfg(target_os = "android")]
+        let theme_changed = {
+            let system_theme = akari_native::theme::from_event_loop(event_loop);
+            let changed = system_theme != self.system_theme;
+            self.system_theme = system_theme;
+            changed
+        };
+        #[cfg(not(target_os = "android"))]
+        let theme_changed = false;
+        if insets_changed || theme_changed {
+            self.rebuild();
+        }
     }
     fn window_event(&mut self, event_loop: &ActiveEventLoop, id: WindowId, event: WindowEvent) {
         let Some(window) = self.window.clone() else {
@@ -53,6 +74,7 @@ impl<A: Application> ApplicationHandler<A::Message> for Runtime<A> {
             WindowEvent::Resized(_) | WindowEvent::ScaleFactorChanged { .. } => {
                 self.system_theme =
                     akari_native::theme::update_from_window(&window, self.system_theme);
+                self.update_insets(event_loop);
                 if let Some(g) = &mut self.graphics {
                     let s = window.inner_size();
                     g.renderer.configure(&g.surface, [s.width, s.height]);
@@ -65,8 +87,8 @@ impl<A: Application> ApplicationHandler<A::Message> for Runtime<A> {
             }
             WindowEvent::CursorMoved { position, .. } => {
                 let p = position.to_logical::<f32>(scale);
-                self.pointer = [p.x, p.y];
-                self.dispatch(Event::PointerMove(p.x, p.y));
+                self.pointer = self.content_point(p.x, p.y);
+                self.dispatch(Event::PointerMove(self.pointer[0], self.pointer[1]));
             }
             WindowEvent::MouseInput {
                 state,
@@ -92,23 +114,27 @@ impl<A: Application> ApplicationHandler<A::Message> for Runtime<A> {
             }
             WindowEvent::Touch(t) => {
                 let p = t.location.to_logical::<f32>(scale);
+                let p = self.content_point(p.x, p.y);
                 match t.phase {
                     TouchPhase::Started if self.touch.is_none() => {
-                        self.touch = Some((t.id, [p.x, p.y], false));
-                        self.dispatch(Event::PointerDown(p.x, p.y));
-                        self.position_cursor(p.x, p.y);
+                        self.touch = Some((t.id, p, false));
+                        self.dispatch(Event::PointerDown(p[0], p[1]));
+                        self.position_cursor(p[0], p[1]);
                     }
                     TouchPhase::Moved => {
                         if let Some((id, old, moved)) = self.touch
                             && id == t.id
                         {
-                            let delta = old[1] - p.y;
-                            let moved = moved || delta.abs() > 4.;
+                            let delta = old[1] - p[1];
+                            let began_drag = !moved && delta.abs() > 4.;
+                            let moved = moved || began_drag;
                             if moved {
-                                self.dispatch(Event::Cancel);
-                                self.dispatch(Event::Scroll(p.x, p.y, delta));
+                                if began_drag {
+                                    self.dispatch(Event::Cancel);
+                                }
+                                self.dispatch(Event::Scroll(p[0], p[1], delta));
                             }
-                            self.touch = Some((id, [p.x, p.y], moved));
+                            self.touch = Some((id, p, moved));
                         }
                     }
                     TouchPhase::Ended => {
@@ -117,7 +143,7 @@ impl<A: Application> ApplicationHandler<A::Message> for Runtime<A> {
                         {
                             self.touch = None;
                             if !moved {
-                                self.dispatch(Event::PointerUp(p.x, p.y));
+                                self.dispatch(Event::PointerUp(p[0], p[1]));
                             }
                         }
                     }
@@ -134,9 +160,9 @@ impl<A: Application> ApplicationHandler<A::Message> for Runtime<A> {
                 self.ime = false;
                 self.dispatch(Event::Composition(String::new()));
             }
-            WindowEvent::Ime(Ime::Preedit(text, _)) => {
+            WindowEvent::Ime(Ime::Preedit(text, cursor)) => {
                 self.ime = !text.is_empty();
-                self.dispatch(Event::Composition(text));
+                self.dispatch(Event::CompositionWithCursor(text, cursor));
             }
             WindowEvent::Ime(Ime::Commit(text)) => {
                 self.ime = false;
@@ -164,7 +190,9 @@ impl<A: Application> ApplicationHandler<A::Message> for Runtime<A> {
                 if size.width == 0 || size.height == 0 {
                     return;
                 }
-                let draws = self.ui.draw();
+                let mut draws = self.ui.draw();
+                let insets = self.insets();
+                Runtime::<A>::offset_draws(&mut draws, [insets.left, insets.top]);
                 let theme = self.active_theme();
                 if let Some(g) = &mut self.graphics {
                     match g.surface.get_current_texture() {
