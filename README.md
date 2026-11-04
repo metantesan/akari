@@ -106,6 +106,6 @@ and Gradle Wrapper third-party license texts and notices.
 ## Releasing the CLI
 
 To publish the CLI, update the workspace version and push a Git tag named
-`akari-cli-v<version>`. The workflow checks the tag and publishes only
-`akari-cli`. Configure the repository Actions secret
+`v<version>` (for example, `v0.0.1`). The workflow checks the tag and publishes
+only `akari-cli`. Configure the repository Actions secret
 `CARGO_REGISTRY_TOKEN`; the framework crates remain unpublished.

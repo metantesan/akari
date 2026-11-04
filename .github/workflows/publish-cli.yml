@@ -3,7 +3,7 @@ name: Publish akari-cli
 on:
   push:
     tags:
-      - "akari-cli-v*"
+      - "v*.*.*"
 
 permissions:
   contents: read
@@ -24,14 +24,10 @@ jobs:
           from pathlib import Path
 
           tag = os.environ["RELEASE_TAG"]
-          prefix = "akari-cli-v"
-          if not tag.startswith(prefix):
-              raise SystemExit(f"expected a tag starting with {prefix!r}")
-
           workspace = tomllib.loads(Path("Cargo.toml").read_text())
           cli = tomllib.loads(Path("crates/akari-cli/Cargo.toml").read_text())
           expected = workspace["workspace"]["package"]["version"]
-          if cli["package"]["name"] != "akari-cli" or tag[len(prefix):] != expected:
+          if cli["package"]["name"] != "akari-cli" or tag != f"v{expected}":
               raise SystemExit(
                   f"release tag {tag!r} does not match akari-cli version {expected!r}"
               )
