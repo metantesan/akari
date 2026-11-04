@@ -1,0 +1,21 @@
+// Generated from the checked-in Lucide SVG assets by build.rs.
+pub const ICON_COUNT: usize = {{count}};
+
+{{#each icons}}
+#[allow(non_upper_case_globals)]
+pub const {{name}}: crate::Icon = crate::Icon {
+    name: "{{svg_name}}",
+    paths: &[
+{{#each paths}}        {{{this}}},
+{{/each}}    ],
+    circles: &[
+{{#each circles}}        {{{this}}},
+{{/each}}    ],
+};
+{{/each}}
+#[cfg(feature = "test-all-icons")]
+pub const ALL_ICONS: &[crate::Icon] = &[
+{{#each icons}}    {{name}},
+{{/each}}];
+
+pub use circle_check as check_circle;

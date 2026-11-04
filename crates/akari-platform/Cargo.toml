@@ -1,0 +1,18 @@
+[package]
+publish = false
+name = "akari-platform"
+version.workspace = true
+edition.workspace = true
+license-file.workspace = true
+repository.workspace = true
+[dependencies]
+akari-core.workspace = true
+akari-renderer.workspace = true
+akari-native.workspace = true
+winit.workspace = true
+pollster.workspace = true
+wgpu.workspace = true
+
+
+[lints]
+workspace = true

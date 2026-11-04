@@ -1,0 +1,20 @@
+# iOS host
+
+This folder is the Swift/UIKit host source for the Akari app. Rust owns the
+shared interface; Swift starts Winit after UIKit has initialized.
+
+On macOS with Xcode and the Rust iOS target installed:
+
+```sh
+cargo build --release --lib --target aarch64-apple-ios --no-default-features --features ios
+```
+
+Create an iOS App target in Xcode, add `AppDelegate.swift`, and set the target's
+Objective-C Bridging Header to `ios/Akari-Bridging-Header.h`. Link
+`target/aarch64-apple-ios/release/lib{{crate_name}}.a` under **Link Binary With
+Libraries**. Add the UIKit, Metal, QuartzCore, and CoreGraphics system
+frameworks. For simulator builds, build the matching Rust target and link its
+static library instead.
+
+This starter includes the native entry point and build instructions; an Xcode
+project file and signing settings are created on the macOS app machine.

@@ -1,0 +1,18 @@
+[package]
+publish = false
+name = "akari-native"
+version.workspace = true
+edition.workspace = true
+license-file.workspace = true
+repository.workspace = true
+
+[target.'cfg(any(target_os = "linux", target_os = "windows", target_os = "macos"))'.dependencies]
+arboard.workspace = true
+
+[dependencies]
+sys-locale.workspace = true
+fluent.workspace = true
+unic-langid.workspace = true
+
+[lints]
+workspace = true

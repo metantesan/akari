@@ -1,0 +1,19 @@
+[package]
+publish = false
+name = "akari-tasks"
+version.workspace = true
+edition.workspace = true
+license-file.workspace = true
+repository.workspace = true
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+akari.workspace = true
+akari-renderer.workspace = true
+pollster.workspace = true
+wgpu.workspace = true
+
+[lints]
+workspace = true

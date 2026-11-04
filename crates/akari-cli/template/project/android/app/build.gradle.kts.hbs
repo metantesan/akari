@@ -1,0 +1,86 @@
+import org.gradle.api.tasks.Exec
+import org.gradle.api.tasks.Sync
+import java.util.Properties
+
+plugins {
+    id("com.android.application")
+}
+
+val crateName = "{{crate_name}}"
+val workspaceRoot = rootProject.projectDir.parentFile
+val rustTarget = "aarch64-linux-android"
+val rustTargetDir = layout.buildDirectory.dir("rust-target")
+val generatedJniLibs = layout.buildDirectory.dir("generated/jniLibs")
+val rustLibrary = rustTargetDir.get().file("$rustTarget/release/lib$crateName.so").asFile
+val rustNdkVersion = "30.0.16248370"
+val localProperties = Properties().apply {
+    val file = rootProject.file("local.properties")
+    if (file.isFile) file.inputStream().use { load(it) }
+}
+val sdkHome = System.getenv("ANDROID_HOME")
+    ?: System.getenv("ANDROID_SDK_ROOT")
+    ?: localProperties.getProperty("sdk.dir")
+    ?: error("Set ANDROID_HOME to your Android SDK")
+val ndkHome = System.getenv("ANDROID_NDK_HOME")
+    ?: System.getenv("ANDROID_NDK_ROOT")
+    ?: System.getenv("ANDROID_NDK")
+    ?: "$sdkHome/ndk/$rustNdkVersion"
+val hostTag = when {
+    System.getProperty("os.name").startsWith("Windows") -> "windows-x86_64"
+    System.getProperty("os.name").startsWith("Mac") -> "darwin-x86_64"
+    else -> "linux-x86_64"
+}
+val rustLinker = "$ndkHome/toolchains/llvm/prebuilt/$hostTag/bin/aarch64-linux-android26-clang"
+val cargoExecutable = System.getenv("CARGO")
+    ?: File(System.getProperty("user.home"), ".cargo/bin/cargo").takeIf { it.isFile }?.absolutePath
+    ?: "cargo"
+
+val buildRustAndroid = tasks.register<Exec>("buildRustAndroid") {
+    group = "build"
+    description = "Build the app's Rust cdylib for Android ARM64."
+    workingDir = workspaceRoot
+    commandLine(cargoExecutable, "build", "--release", "--lib", "--target", rustTarget, "--no-default-features", "--features", "android")
+    environment("CARGO_TARGET_DIR", rustTargetDir.get().asFile)
+    environment("ANDROID_HOME", sdkHome)
+    environment("ANDROID_NDK_HOME", ndkHome)
+    environment("CARGO_TARGET_AARCH64_LINUX_ANDROID_LINKER", rustLinker)
+    inputs.files(fileTree(workspaceRoot) {
+        include("Cargo.toml", "Cargo.lock", "src/**")
+        exclude("**/target/**", "**/build/**")
+    })
+    outputs.file(rustLibrary)
+}
+
+val stageRustAndroid = tasks.register<Sync>("stageRustAndroid") {
+    dependsOn(buildRustAndroid)
+    from(rustLibrary) { into("arm64-v8a") }
+    into(generatedJniLibs)
+}
+
+android {
+    namespace = "{{identifier}}"
+    compileSdk = 36
+    buildToolsVersion = "36.0.0"
+    ndkVersion = rustNdkVersion
+
+    defaultConfig {
+        applicationId = "{{identifier}}"
+        minSdk = 26
+        targetSdk = 36
+        versionCode = 1
+        versionName = "0.1.0"
+    }
+
+    packaging {
+        jniLibs.useLegacyPackaging = true
+    }
+}
+
+androidComponents {
+    onVariants { variant ->
+        variant.sources.jniLibs?.addGeneratedSourceDirectory(
+            stageRustAndroid,
+            Sync::getDestinationDirectory,
+        )
+    }
+}

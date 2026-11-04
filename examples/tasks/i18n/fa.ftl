@@ -1,0 +1,16 @@
+app-title = کارها
+task-summary = { $open } باز · { $done } انجام‌شده
+add-placeholder = افزودن یک کار
+new-task-label = کار جدید
+add-task-label = افزودن کار
+task-title-placeholder = عنوان کار
+task-title-label = کار: { $title }
+mark-task-active = فعال‌کردن کار
+complete-task = انجام کار
+delete-task = حذف { $title }
+    .aria-label = حذف کار { $title }
+filter-tasks = پالایش کارها
+filter-all = همه
+filter-open = باز
+filter-done = انجام‌شده
+switch-color-theme = تغییر پوسته

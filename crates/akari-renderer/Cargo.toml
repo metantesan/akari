@@ -1,0 +1,21 @@
+[package]
+publish = false
+name = "akari-renderer"
+version.workspace = true
+edition.workspace = true
+license-file.workspace = true
+repository.workspace = true
+[dependencies]
+akari-core.workspace = true
+wgpu.workspace = true
+cosmic-text.workspace = true
+bytemuck.workspace = true
+pollster.workspace = true
+unicode-bidi.workspace = true
+unicode-segmentation.workspace = true
+
+[dev-dependencies]
+akari-icons = { workspace = true, features = ["test-all-icons"] }
+
+[lints]
+workspace = true

@@ -1,0 +1,29 @@
+[package]
+name = "{{package_name}}"
+version = "0.1.0"
+edition = "2024"
+
+[package.metadata.akari]
+display-name = "{{display_name}}"
+application-id = "{{identifier}}"
+
+[lib]
+crate-type = ["cdylib", "rlib", "staticlib"]
+
+[features]
+default = ["desktop"]
+desktop = ["dep:akari"]
+android = ["dep:akari", "dep:jni"]
+ios = ["dep:akari"]
+
+[dependencies]
+{{akari_dependency}}
+
+[target.'cfg(target_os = "android")'.dependencies]
+jni = { version = "0.22.4", optional = true }
+
+[profile.release]
+opt-level = "z"
+strip = true
+lto = "thin"
+codegen-units = 16

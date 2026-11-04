@@ -1,0 +1,17 @@
+package {{identifier}}
+
+import android.app.NativeActivity
+import {{identifier}}.runtime.AkariPlugins
+
+/** Android entry point; the shared Akari UI and state live in Rust. */
+class MainActivity : NativeActivity() {
+    override fun onCreate(savedInstanceState: android.os.Bundle?) {
+        super.onCreate(savedInstanceState)
+        // Register app-owned plugins here, for example:
+        // AkariPlugins.register(DeviceInfoPlugin(this))
+    }
+
+    /** Called by Rust through JNI. Plugin methods run on the Android UI thread. */
+    fun akariInvokePlugin(plugin: String, action: String, payload: String): String =
+        AkariPlugins.invoke(plugin, action, payload)
+}

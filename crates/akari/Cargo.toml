@@ -1,0 +1,25 @@
+[package]
+publish = false
+name = "akari-gui"
+version.workspace = true
+edition.workspace = true
+license-file.workspace = true
+repository.workspace = true
+
+[lib]
+name = "akari"
+
+[features]
+default = ["components"]
+icons = ["dep:akari-icons"]
+components = ["dep:akari-components", "icons"]
+
+[dependencies]
+akari-core.workspace = true
+akari-platform.workspace = true
+akari-icons = { workspace = true, optional = true }
+akari-components = { workspace = true, optional = true }
+akari-native.workspace = true
+
+[lints]
+workspace = true

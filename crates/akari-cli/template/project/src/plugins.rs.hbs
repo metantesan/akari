@@ -1,0 +1,39 @@
+//! Android Kotlin plugin calls. The small string protocol keeps plugins independent
+//! of the UI crate and lets each plugin define its own payload format.
+
+#[cfg(target_os = "android")]
+pub fn invoke(
+    app: &akari::winit::platform::android::activity::AndroidApp,
+    plugin: &str,
+    action: &str,
+    payload: &str,
+) -> Result<String, Box<dyn std::error::Error>> {
+    use jni::{jni_sig, jni_str, objects::{JObject, JString, JValue}, refs::Global, JavaVM};
+
+    // AndroidApp owns the process VM and a JNI reference to the Activity.
+    let vm = unsafe { JavaVM::from_raw(app.vm_as_ptr().cast()) };
+    let activity = app.activity_as_ptr();
+    vm.attach_current_thread(|env| {
+        let plugin = env.new_string(plugin)?;
+        let action = env.new_string(action)?;
+        let payload = env.new_string(payload)?;
+        // AndroidApp owns this global Activity reference for its lifetime.
+        let activity_raw: jni::sys::jobject = activity.cast();
+        let activity = unsafe { env.as_cast_raw::<Global<JObject>>(&activity_raw)? };
+        let plugin = JObject::from(plugin);
+        let action = JObject::from(action);
+        let payload = JObject::from(payload);
+        let result = env.call_method(
+            activity.as_ref(),
+            jni_str!("akariInvokePlugin"),
+            jni_sig!("(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;"),
+            &[
+                JValue::Object(&plugin),
+                JValue::Object(&action),
+                JValue::Object(&payload),
+            ],
+        )?.l()?;
+        let result = unsafe { JString::from_raw(env, result.as_raw()) };
+        result.try_to_string(env)
+    }).map_err(|error| error.into())
+}

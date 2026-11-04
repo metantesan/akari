@@ -1,0 +1,21 @@
+[package]
+publish = false
+name = "akari-showcase"
+version.workspace = true
+edition.workspace = true
+license-file.workspace = true
+repository.workspace = true
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+akari.workspace = true
+akari-renderer.workspace = true
+pollster.workspace = true
+wgpu.workspace = true
+eyre.workspace = true
+color-eyre.workspace = true
+
+[lints]
+workspace = true

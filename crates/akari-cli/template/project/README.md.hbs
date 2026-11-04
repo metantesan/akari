@@ -1,0 +1,54 @@
+# {{display_name}}
+
+This is the **{{display_name}} app project**. It has its own Rust package and
+native platform hosts. The Akari toolkit source workspace is a separate project
+and is only included as a dependency.
+
+## Desktop
+
+```sh
+cargo run
+```
+
+The generated manifest uses Cargo features to select its platform integration.
+`desktop` is enabled by default; Android and iOS builds select `android` and
+`ios` respectively. To build a platform manually, disable defaults and enable
+its feature, for example `cargo build --no-default-features --features ios`.
+
+## Android
+
+Install Android SDK platform 36, Build Tools `36.0.0`, NDK `30.0.16248370`, and
+the Rust `aarch64-linux-android` target. With a phone connected and USB debugging
+enabled:
+
+```sh
+cd android
+./gradlew :app:installDebug
+adb shell am start -n {{identifier}}/.MainActivity
+```
+
+The Android host is the Kotlin `NativeActivity` in
+`android/app/src/main/java/{{java_package_path}}/MainActivity.kt`. Gradle
+builds this project's Rust library and packages it into the APK.
+
+### Kotlin plugins
+
+Implement `{{identifier}}.runtime.AkariPlugin` in Kotlin, register it from
+`MainActivity.onCreate`, then call it from Rust with
+`crate::plugins::invoke(&app, "plugin-id", "action", "payload")`. The return
+value is a string; JSON is a convenient payload format. This is a JNI bridge
+through the Android activity, so plugin calls should stay on the UI thread and
+hand long-running work to a Kotlin coroutine. Typed per-plugin bindgen is a
+planned follow-up; this starter provides the working generic bridge.
+
+## iOS
+
+The Swift application delegate and Rust bridge declaration are in `ios/`.
+Follow `ios/README.md` to add them to an Xcode iOS app target and link this
+project's Rust static library. iOS builds require macOS and Xcode.
+
+## Local toolkit development
+
+When creating the app from an Akari checkout, pass `--path <checkout>` to use
+that source tree. Without `--path`, the app uses Akari directly from the
+project's Git repository.

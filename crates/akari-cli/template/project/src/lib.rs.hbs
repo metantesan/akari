@@ -1,0 +1,89 @@
+use akari::{Element, SimpleComponent, Task, Theme, ThemePreference};
+
+#[cfg(target_os = "android")]
+pub mod plugins;
+
+#[derive(Clone, Debug)]
+pub enum Message {
+    Increment,
+    Decrement,
+    ToggleTheme,
+}
+
+#[derive(Default)]
+pub struct App {
+    count: i64,
+    dark: Option<bool>,
+}
+
+impl SimpleComponent for App {
+    type Input = Message;
+
+    fn title(&self) -> &str {
+        "{{display_name}}"
+    }
+
+    fn update(&mut self, message: Self::Input) -> Vec<Task<Self::Input>> {
+        match message {
+            Message::Increment => self.count += 1,
+            Message::Decrement => self.count -= 1,
+            Message::ToggleTheme => self.dark = Some(!self.dark.unwrap_or(false)),
+        }
+        vec![]
+    }
+
+    fn view(&self, size: [f32; 2]) -> Element<Self::Input> {
+        let count = self.count;
+        let compact = size[0] < 560.;
+        akari::view! {
+            Column(0) [
+                akari::view! { Text(1, "{{display_name}} is ready", if compact { 25. } else { 32. }) },
+                akari::view! { Text(2, format!("Counter: {count}"), 20.) },
+                akari::view! {
+                    Row(3) [
+                        akari::view! { Button(4, "−", Message::Decrement).width(72.) },
+                        akari::view! { Button(5, "+", Message::Increment).width(72.) },
+                        akari::view! {
+                            Button(6, if self.dark.unwrap_or(false) { "Light" } else { "Dark" }, Message::ToggleTheme)
+                                .width(88.)
+                        },
+                    ]
+                    .height(56.)
+                    .gap(8.)
+                },
+            ]
+            .padding(if compact { 20. } else { 32. })
+            .gap(18.)
+        }
+    }
+
+    fn theme(&self) -> Theme {
+        if self.dark.unwrap_or(false) { Theme::dark() } else { Theme::light() }
+    }
+
+    fn theme_preference(&self) -> ThemePreference {
+        if self.dark.is_some() { ThemePreference::Custom } else { ThemePreference::System }
+    }
+}
+
+#[cfg(target_os = "android")]
+#[unsafe(no_mangle)]
+fn android_main(app: akari::winit::platform::android::activity::AndroidApp) {
+    use akari::winit::{event_loop::EventLoop, platform::android::EventLoopBuilderExtAndroid};
+
+    let event_loop = EventLoop::<Message>::with_user_event()
+        .with_android_app(app)
+        .build()
+        .expect("Android event loop");
+    if let Err(error) = akari::run_with_event_loop(App::init(), event_loop) {
+        eprintln!("{error}");
+    }
+}
+
+#[cfg(target_os = "ios")]
+#[unsafe(no_mangle)]
+pub extern "C" fn akari_ios_main() {
+    if let Err(error) = akari::run(App::init()) {
+        eprintln!("{error}");
+    }
+}

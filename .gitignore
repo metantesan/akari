@@ -1,0 +1,46 @@
+# Rust build output
+/target/
+**/target/
+/.agents/
+/.aws/
+/.codex/
+
+# Android / Gradle
+.gradle/
+**/.gradle/
+local.properties
+**/local.properties
+**/build/
+*.apk
+*.aab
+
+# Local environment and signing credentials
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+*.keystore
+*.mobileprovision
+key.properties
+keystore.properties
+
+# Apple platforms
+DerivedData/
+*.xcuserstate
+xcuserdata/
+*.ipa
+*.dSYM/
+
+# IDEs and editors
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db

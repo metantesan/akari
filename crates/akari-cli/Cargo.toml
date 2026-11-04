@@ -1,0 +1,21 @@
+[package]
+name = "akari-cli"
+version.workspace = true
+edition.workspace = true
+license-file.workspace = true
+repository.workspace = true
+description = "Create, build, and bundle cross-platform applications with Akari"
+readme = "README.md"
+keywords = ["gui", "application", "scaffolding", "cli"]
+categories = ["command-line-utilities", "development-tools"]
+default-run = "akari"
+
+[[bin]]
+name = "akari"
+path = "src/main.rs"
+
+[dependencies]
+clap.workspace = true
+
+[lints]
+workspace = true

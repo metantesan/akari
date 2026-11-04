@@ -1,0 +1,42 @@
+name: Bug report
+description: Report a reproducible problem in Akari.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: "Please search existing issues first. Do not report security vulnerabilities here; see SECURITY.md."
+  - type: input
+    id: version
+    attributes:
+      label: Akari revision
+      description: Release version or Git commit.
+      placeholder: 0.0.1 or commit SHA
+    validations:
+      required: true
+  - type: input
+    id: platform
+    attributes:
+      label: Platform
+      description: OS, device, and architecture.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to reproduce
+      description: Include a minimal example if possible.
+      render: text
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true

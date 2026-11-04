@@ -1,0 +1,16 @@
+app-title = Tasks
+task-summary = { $open } open · { $done } done
+add-placeholder = Add a task
+new-task-label = New task
+add-task-label = Add task
+task-title-placeholder = Task title
+task-title-label = Task: { $title }
+mark-task-active = Mark task active
+complete-task = Complete task
+delete-task = Delete { $title }
+    .aria-label = Delete task { $title }
+filter-tasks = Filter tasks
+filter-all = All
+filter-open = Open
+filter-done = Done
+switch-color-theme = Switch color theme

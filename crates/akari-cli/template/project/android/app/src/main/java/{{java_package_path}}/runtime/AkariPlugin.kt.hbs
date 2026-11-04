@@ -1,0 +1,20 @@
+package {{identifier}}.runtime
+
+/** Implement this interface in Kotlin to expose native Android capabilities to Rust. */
+interface AkariPlugin {
+    val id: String
+    fun invoke(action: String, payload: String): String
+}
+
+/** Register app plugins here. Keep calls short; dispatch longer work to a coroutine. */
+object AkariPlugins {
+    private val plugins = mutableMapOf<String, AkariPlugin>()
+
+    fun register(plugin: AkariPlugin) {
+        require(plugin.id.isNotBlank()) { "Akari plugin id cannot be blank" }
+        check(plugins.put(plugin.id, plugin) == null) { "Duplicate Akari plugin: ${plugin.id}" }
+    }
+
+    fun invoke(plugin: String, action: String, payload: String): String =
+        checkNotNull(plugins[plugin]) { "Unknown Akari plugin: $plugin" }.invoke(action, payload)
+}
