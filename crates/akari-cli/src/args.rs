@@ -19,6 +19,8 @@ pub(super) enum Commands {
     New(NewArgs),
     /// Build an application for the host or a selected target.
     Build(BuildArgs),
+    /// Run an application on the host or install and launch it on Android.
+    Run(RunArgs),
     /// Bundle the current host build as an AppImage or macOS package.
     Bundle(BundleArgs),
 }
@@ -44,6 +46,16 @@ pub(super) struct NewArgs {
 
 #[derive(Debug, Args)]
 pub(super) struct BuildArgs {
+    /// Application project directory. Defaults to the current directory.
+    #[arg(long, value_name = "DIR")]
+    pub(super) project: Option<PathBuf>,
+    /// `android` or a Rust compilation target triple.
+    #[arg(long, value_name = "TARGET")]
+    pub(super) target: Option<String>,
+}
+
+#[derive(Debug, Args)]
+pub(super) struct RunArgs {
     /// Application project directory. Defaults to the current directory.
     #[arg(long, value_name = "DIR")]
     pub(super) project: Option<PathBuf>,

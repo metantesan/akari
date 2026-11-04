@@ -19,6 +19,23 @@ impl crate::ThemeProvider for Platform {
     fn system_theme(&self, hint: Option<bool>) -> crate::theme::SystemTheme {
         theme::resolve(hint)
     }
+
+    fn system_theme_from_event_loop(
+        &self,
+        event_loop: &winit::event_loop::ActiveEventLoop,
+    ) -> crate::theme::SystemTheme {
+        use winit::platform::android::ActiveEventLoopExtAndroid;
+        theme::resolve_configuration(&event_loop.android_app().config())
+    }
+
+    fn system_theme_from_window(
+        &self,
+        window: &winit::window::Window,
+        _current: crate::theme::SystemTheme,
+    ) -> crate::theme::SystemTheme {
+        use winit::platform::android::WindowExtAndroid;
+        theme::resolve_configuration(&window.config())
+    }
 }
 
 impl crate::LocaleProvider for Platform {
@@ -30,6 +47,22 @@ impl crate::LocaleProvider for Platform {
 impl crate::font::SystemFontProvider for Platform {
     fn system_fonts(&self) -> crate::fonts::SystemFonts {
         font::system_fonts()
+    }
+
+    fn system_fonts_from_event_loop(
+        &self,
+        event_loop: &winit::event_loop::ActiveEventLoop,
+    ) -> crate::fonts::SystemFonts {
+        use winit::platform::android::ActiveEventLoopExtAndroid;
+        let config = event_loop.android_app().config();
+        if config.sdk_version() >= 29 {
+            match font::system_fonts_from_ndk() {
+                Some(fonts) => fonts,
+                None => font::system_fonts(),
+            }
+        } else {
+            font::system_fonts()
+        }
     }
 }
 

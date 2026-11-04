@@ -7,7 +7,7 @@ and is only included as a dependency.
 ## Desktop
 
 ```sh
-cargo run
+akari run --project .
 ```
 
 The generated manifest uses Cargo features to select its platform integration.
@@ -22,9 +22,7 @@ the Rust `aarch64-linux-android` target. With a phone connected and USB debuggin
 enabled:
 
 ```sh
-cd android
-./gradlew :app:installDebug
-adb shell am start -n {{identifier}}/.MainActivity
+akari run --target android --project .
 ```
 
 The Android host is the Kotlin `NativeActivity` in

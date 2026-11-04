@@ -2,12 +2,7 @@ use super::*;
 
 impl<A: Application> ApplicationHandler<A::Message> for Runtime<A> {
     fn resumed(&mut self, event_loop: &ActiveEventLoop) {
-        self.system_theme = akari_native::ThemeProvider::system_theme(
-            &akari_native::current(),
-            event_loop
-                .system_theme()
-                .map(|theme| theme == WindowTheme::Dark),
-        );
+        self.system_theme = akari_native::theme::from_event_loop(event_loop);
         let first = self.window.is_none();
         if first {
             match event_loop.create_window(
@@ -24,7 +19,7 @@ impl<A: Application> ApplicationHandler<A::Message> for Runtime<A> {
             }
         }
         if self.graphics.is_none()
-            && let Err(e) = self.create_graphics()
+            && let Err(e) = self.create_graphics(event_loop)
         {
             self.fail(event_loop, e);
             return;
@@ -56,6 +51,8 @@ impl<A: Application> ApplicationHandler<A::Message> for Runtime<A> {
         match event {
             WindowEvent::CloseRequested => event_loop.exit(),
             WindowEvent::Resized(_) | WindowEvent::ScaleFactorChanged { .. } => {
+                self.system_theme =
+                    akari_native::theme::update_from_window(&window, self.system_theme);
                 if let Some(g) = &mut self.graphics {
                     let s = window.inner_size();
                     g.renderer.configure(&g.surface, [s.width, s.height]);
@@ -168,6 +165,7 @@ impl<A: Application> ApplicationHandler<A::Message> for Runtime<A> {
                     return;
                 }
                 let draws = self.ui.draw();
+                let theme = self.active_theme();
                 if let Some(g) = &mut self.graphics {
                     match g.surface.get_current_texture() {
                         wgpu_surface::CurrentSurfaceTexture::Success(frame)
@@ -177,7 +175,7 @@ impl<A: Application> ApplicationHandler<A::Message> for Runtime<A> {
                                 &view,
                                 [size.width, size.height],
                                 scale as f32,
-                                self.app.theme(),
+                                theme,
                                 &draws,
                             ) {
                                 self.fail(event_loop, e);
@@ -194,7 +192,7 @@ impl<A: Application> ApplicationHandler<A::Message> for Runtime<A> {
                         wgpu_surface::CurrentSurfaceTexture::Occluded => {}
                         wgpu_surface::CurrentSurfaceTexture::Lost => {
                             self.graphics = None;
-                            if let Err(e) = self.create_graphics() {
+                            if let Err(e) = self.create_graphics(event_loop) {
                                 self.fail(event_loop, e)
                             } else {
                                 window.request_redraw();

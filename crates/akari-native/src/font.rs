@@ -45,15 +45,28 @@ impl SystemFonts {
     }
 }
 
+/// Load the fonts selected by this platform's native provider.
+pub fn system_fonts() -> SystemFonts {
+    crate::font::SystemFontProvider::system_fonts(&crate::current())
+}
+
+/// Load system fonts using the active platform context when one is required.
+pub fn from_event_loop(event_loop: &winit::event_loop::ActiveEventLoop) -> SystemFonts {
+    crate::font::SystemFontProvider::system_fonts_from_event_loop(&crate::current(), event_loop)
+}
+
 /// Supplies the selected system font and framework fallback faces.
 pub trait SystemFontProvider {
     /// Resolve the current system UI font and return usable fallback faces.
     fn system_fonts(&self) -> SystemFonts;
-}
 
-/// Load the fonts selected by this platform's native provider.
-pub fn system_fonts() -> SystemFonts {
-    crate::font::SystemFontProvider::system_fonts(&crate::current())
+    /// Resolve fonts with access to platform context; defaults to a context-free lookup.
+    fn system_fonts_from_event_loop(
+        &self,
+        _event_loop: &winit::event_loop::ActiveEventLoop,
+    ) -> SystemFonts {
+        self.system_fonts()
+    }
 }
 
 pub(crate) fn font_family(bytes: &[u8]) -> Option<String> {

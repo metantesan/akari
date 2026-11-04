@@ -1,23 +1,23 @@
 //! Native operating-system services shared by Akari applications.
 //!
-//! Each supported operating system has an adapter directory. The selected
+//! Each supported operating system has a native adapter directory. The
 //! adapter is determined at compile time, keeping platform APIs out of widgets.
 
 #[cfg(target_os = "android")]
 #[path = "android/mod.rs"]
-mod selected;
+mod native;
 #[cfg(target_os = "ios")]
 #[path = "ios/mod.rs"]
-mod selected;
+mod native;
 #[cfg(target_os = "linux")]
 #[path = "linux/mod.rs"]
-mod selected;
+mod native;
 #[cfg(target_os = "macos")]
 #[path = "mac/mod.rs"]
-mod selected;
+mod native;
 #[cfg(target_os = "windows")]
 #[path = "windows/mod.rs"]
-mod selected;
+mod native;
 
 #[cfg(not(any(
     target_os = "android",
@@ -57,7 +57,7 @@ mod font;
 
 /// Native system-font lookup and framework-owned fallback faces.
 pub mod fonts {
-    pub use crate::font::{SystemFontProvider, SystemFonts, system_fonts};
+    pub use crate::font::{SystemFontProvider, SystemFonts, from_event_loop, system_fonts};
 }
 
 /// Returns system-preferred BCP 47 language tags, most preferred first.
@@ -75,7 +75,15 @@ pub mod theme {
     }
 
     pub fn from_dark(is_dark: Option<bool>) -> SystemTheme {
-        crate::selected::theme::resolve(is_dark)
+        crate::native::theme::resolve(is_dark)
+    }
+
+    pub fn from_event_loop(event_loop: &winit::event_loop::ActiveEventLoop) -> SystemTheme {
+        crate::ThemeProvider::system_theme_from_event_loop(&crate::current(), event_loop)
+    }
+
+    pub fn update_from_window(window: &winit::window::Window, current: SystemTheme) -> SystemTheme {
+        crate::ThemeProvider::system_theme_from_window(&crate::current(), window, current)
     }
 }
 
@@ -88,6 +96,25 @@ pub trait Clipboard {
 /// Platform appearance information, normalized to Akari's light/dark palette.
 pub trait ThemeProvider {
     fn system_theme(&self, hint: Option<bool>) -> theme::SystemTheme;
+
+    fn system_theme_from_event_loop(
+        &self,
+        event_loop: &winit::event_loop::ActiveEventLoop,
+    ) -> theme::SystemTheme {
+        self.system_theme(
+            event_loop
+                .system_theme()
+                .map(|theme| theme == winit::window::Theme::Dark),
+        )
+    }
+
+    fn system_theme_from_window(
+        &self,
+        _window: &winit::window::Window,
+        current: theme::SystemTheme,
+    ) -> theme::SystemTheme {
+        current
+    }
 }
 
 /// Native ordered locale preferences, returned as BCP 47 tags.
@@ -114,7 +141,7 @@ impl std::fmt::Display for DirectoryError {
 
 impl std::error::Error for DirectoryError {}
 
-pub use selected::Platform as CurrentPlatform;
+pub use native::Platform as CurrentPlatform;
 
 pub fn current() -> CurrentPlatform {
     CurrentPlatform

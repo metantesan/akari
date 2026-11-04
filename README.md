@@ -67,7 +67,7 @@ akari new "Daily Notes" --app-id com.akari.notes
 ```
 
 Use `--path .` with the workspace command when developing the toolkit locally.
-Run `akari --help` for the available project, build, and bundle commands.
+Run `akari --help` for project creation, build, run, and bundle commands.
 
 ## Workspace layout
 

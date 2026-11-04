@@ -1,8 +1,20 @@
-use std::{fs, path::PathBuf};
+use std::{ffi::CString, fs, path::PathBuf};
 
 pub(crate) fn system_fonts() -> crate::font::SystemFonts {
     let path = configured_sans_serif();
     crate::font::SystemFonts::from_path(path.as_deref(), None)
+}
+
+pub(crate) fn system_fonts_from_ndk() -> Option<crate::font::SystemFonts> {
+    use ndk::font::{FontMatcher, FontWeight};
+
+    let family = CString::new("sans-serif").ok()?;
+    let text: Vec<u16> = "Akari".encode_utf16().collect();
+    let mut matcher = FontMatcher::new();
+    matcher.set_style(FontWeight::NORMAL, false);
+    let font = matcher.match_font(&family, &text, None);
+    let bytes = fs::read(font.path()).ok()?;
+    Some(crate::font::SystemFonts::from_bytes(Some(bytes), None))
 }
 
 fn configured_sans_serif() -> Option<PathBuf> {

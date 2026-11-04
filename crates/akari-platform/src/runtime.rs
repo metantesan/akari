@@ -13,7 +13,7 @@ use winit::{
     event::{ElementState, Ime, MouseButton, MouseScrollDelta, TouchPhase, WindowEvent},
     event_loop::{ActiveEventLoop, EventLoop, EventLoopProxy},
     keyboard::ModifiersState,
-    window::{Theme as WindowTheme, Window, WindowId},
+    window::{Window, WindowId},
 };
 
 pub fn run<A: Application>(app: A) -> Result<(), Box<dyn std::error::Error>> {
@@ -66,6 +66,17 @@ struct Runtime<A: Application> {
     error: Option<String>,
 }
 impl<A: Application> Runtime<A> {
+    fn active_theme(&self) -> Theme {
+        if self.app.theme_preference() != ThemePreference::System {
+            return self.app.theme();
+        }
+        match self.system_theme {
+            akari_native::theme::SystemTheme::Dark => Theme::dark(),
+            akari_native::theme::SystemTheme::Light => Theme::light(),
+            akari_native::theme::SystemTheme::Unknown => self.app.theme(),
+        }
+    }
+
     fn tasks(&self, tasks: Vec<Task<A::Message>>) {
         for task in tasks {
             let proxy = self.proxy.clone();
@@ -86,15 +97,7 @@ impl<A: Application> Runtime<A> {
     }
     fn rebuild(&mut self) {
         let size = self.size();
-        self.ui.theme = if self.app.theme_preference() == ThemePreference::System {
-            if self.system_theme == akari_native::theme::SystemTheme::Dark {
-                Theme::dark()
-            } else {
-                Theme::light()
-            }
-        } else {
-            self.app.theme()
-        };
+        self.ui.theme = self.active_theme();
         self.ui.rebuild(self.app.view(size), size);
         if let Some(w) = &self.window {
             w.set_ime_allowed(self.ui.text_focused());
@@ -117,7 +120,7 @@ impl<A: Application> Runtime<A> {
         self.error = Some(error);
         event_loop.exit();
     }
-    fn create_graphics(&mut self) -> Result<(), String> {
+    fn create_graphics(&mut self, event_loop: &ActiveEventLoop) -> Result<(), String> {
         let Some(window) = &self.window else {
             return Ok(());
         };
@@ -126,7 +129,7 @@ impl<A: Application> Runtime<A> {
             .create_surface(window.clone())
             .map_err(|e| e.to_string())?;
         let mut renderer = pollster::block_on(Renderer::new(&instance, Some(&surface)))?;
-        let system_fonts = akari_native::fonts::system_fonts();
+        let system_fonts = akari_native::fonts::from_event_loop(event_loop);
         renderer.set_default_font_family(system_fonts.family());
         for font in system_fonts.faces() {
             renderer.load_font(font.clone());

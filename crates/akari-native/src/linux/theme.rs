@@ -7,6 +7,12 @@ pub(crate) fn resolve(is_dark: Option<bool>) -> SystemTheme {
 }
 
 fn detect_linux_theme() -> Option<SystemTheme> {
+    if is_kde_desktop()
+        && let Some(theme) = detect_kde_theme()
+    {
+        return Some(theme);
+    }
+
     if let Some(value) = command_output(
         "gsettings",
         &["get", "org.gnome.desktop.interface", "color-scheme"],
@@ -29,7 +35,36 @@ fn detect_linux_theme() -> Option<SystemTheme> {
         return Some(theme);
     }
 
+    detect_kde_theme()
+}
+
+fn is_kde_desktop() -> bool {
+    std::env::var("XDG_CURRENT_DESKTOP")
+        .ok()
+        .is_some_and(|desktop| {
+            desktop
+                .split(':')
+                .any(|name| name.to_ascii_lowercase().contains("kde"))
+        })
+}
+
+fn detect_kde_theme() -> Option<SystemTheme> {
     for command in ["kreadconfig6", "kreadconfig5"] {
+        if let Some(background) = command_output(
+            command,
+            &[
+                "--file",
+                "kdeglobals",
+                "--group",
+                "Colors:Window",
+                "--key",
+                "BackgroundNormal",
+            ],
+        ) && let Some(theme) = parse_kde_background(&background)
+        {
+            return Some(theme);
+        }
+
         if let Some(value) = command_output(
             command,
             &[
@@ -79,6 +114,24 @@ fn parse_theme_name(value: &str) -> Option<SystemTheme> {
     } else {
         None
     }
+}
+
+fn parse_kde_background(value: &str) -> Option<SystemTheme> {
+    let rgb = value
+        .split(',')
+        .map(|component| component.trim().parse::<u8>())
+        .collect::<Result<Vec<_>, _>>()
+        .ok()?;
+    if rgb.len() != 3 {
+        return None;
+    }
+    let luminance =
+        (2126 * u32::from(rgb[0]) + 7152 * u32::from(rgb[1]) + 722 * u32::from(rgb[2])) / 10_000;
+    Some(if luminance < 128 {
+        SystemTheme::Dark
+    } else {
+        SystemTheme::Light
+    })
 }
 
 fn from_hint(is_dark: Option<bool>) -> Option<SystemTheme> {
