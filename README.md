@@ -102,3 +102,10 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for pull request guidelines and
 The workspace-root [LICENSE](LICENSE) is the license source for all crates. It
 contains BSD 3-Clause terms for Akari-authored code plus the applicable Lucide
 and Gradle Wrapper third-party license texts and notices.
+
+## Releasing the CLI
+
+To publish the CLI, update the workspace version and push a Git tag named
+`akari-cli-v<version>`. The workflow checks the tag and publishes only
+`akari-cli`. Configure the repository Actions secret
+`CARGO_REGISTRY_TOKEN`; the framework crates remain unpublished.

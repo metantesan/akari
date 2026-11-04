@@ -10,13 +10,13 @@ rust-version = "1.97"
 repository = "https://github.com/metantesan/akari"
 
 [workspace.dependencies]
-akari-core = { path = "crates/akari-core" }
-akari-renderer = { path = "crates/akari-renderer" }
-akari-platform = { path = "crates/akari-platform" }
-akari = { package = "akari-gui", path = "crates/akari" }
-akari-icons = { path = "crates/akari-icons" }
-akari-components = { path = "crates/akari-components" }
-akari-native = { path = "crates/akari-native" }
+akari-core = { version = "0.0.1", path = "crates/akari-core" }
+akari-renderer = { version = "0.0.1", path = "crates/akari-renderer" }
+akari-platform = { version = "0.0.1", path = "crates/akari-platform" }
+akari = { package = "akari-gui", version = "0.0.1", path = "crates/akari" }
+akari-icons = { version = "0.0.1", path = "crates/akari-icons" }
+akari-components = { version = "0.0.1", path = "crates/akari-components" }
+akari-native = { version = "0.0.1", path = "crates/akari-native" }
 winit = { version = "0.30.13", features = ["android-native-activity"] }
 wgpu = "30.0.1"
 cosmic-text = "0.19.0"

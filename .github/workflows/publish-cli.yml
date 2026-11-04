@@ -1,0 +1,42 @@
+name: Publish akari-cli
+
+on:
+  push:
+    tags:
+      - "akari-cli-v*"
+
+permissions:
+  contents: read
+
+jobs:
+  publish-cli:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Check release tag matches workspace version
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          python3 - <<'PY'
+          import os
+          import tomllib
+          from pathlib import Path
+
+          tag = os.environ["RELEASE_TAG"]
+          prefix = "akari-cli-v"
+          if not tag.startswith(prefix):
+              raise SystemExit(f"expected a tag starting with {prefix!r}")
+
+          workspace = tomllib.loads(Path("Cargo.toml").read_text())
+          cli = tomllib.loads(Path("crates/akari-cli/Cargo.toml").read_text())
+          expected = workspace["workspace"]["package"]["version"]
+          if cli["package"]["name"] != "akari-cli" or tag[len(prefix):] != expected:
+              raise SystemExit(
+                  f"release tag {tag!r} does not match akari-cli version {expected!r}"
+              )
+          PY
+      - name: Publish akari-cli to crates.io
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+        run: cargo publish --locked -p akari-cli
